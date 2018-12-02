@@ -1,72 +1,140 @@
 package it.sevenbits.formatter;
 
+import it.sevenbits.formatter.io.exceptions.ReadException;
+import it.sevenbits.formatter.io.exceptions.WriteException;
+import it.sevenbits.formatter.io.interfaces.IReader;
+import it.sevenbits.formatter.io.interfaces.IWriter;
+
+import java.io.IOException;
+
+/**
+ * Class used to format your code.
+ * @since 1.0
+ * @version 1.0
+ * @author Daniil Polyakov
+ */
 public class Formatter {
 
-    private static void indentWithFourSpacesNTimes(StringBuilder sb, int index, int n) {
-        for (int i = 0; i < n; i++) {
-            sb.insert(index, "    ");
-        }
+    private boolean isLetter(final int c) {
+        return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z';
     }
 
-    private static void removeSpacesNewlines(StringBuilder sb, int index) {
-        while (sb.length() > index && (sb.charAt(index) == ' ' || sb.charAt(index) == '\n')) {
-            sb.deleteCharAt(index);
-        }
-        if (sb.length() > index) sb.insert(index, "\n");
-    }
+    /**
+     * Formats your code.
+     * @param reader character reading object
+     * @param writer character writing object
+     */
+    public void format(final IReader reader, final IWriter writer) {
 
-    public static String format(String input) {
-        StringBuilder sb = new StringBuilder(input.trim());
+        int currentSymbol;
+        int indentCounter = 0;
+        boolean nextLineIndent = false;
+        boolean isLetter = false;
+        boolean isSpaceNeeded = false;
 
-        int countOffset = 0;
-
-        int i = 0;
-        char x = sb.charAt(0);
-
-        while (true) {
-            while (x != ';' && x != '{' && x != '}') {
-                i++;
-                x = sb.charAt(i);
-            }
-
-            if (x == ';') {
-                i++;
-                removeSpacesNewlines(sb, i);
-                i++;
-                if(sb.charAt(i) == '}') countOffset--;
-                indentWithFourSpacesNTimes(sb, i, countOffset);
-                i += countOffset * 4;
-            }
-
-            if (x == '{') {
-                if(sb.charAt(i-1) != ' ') {
-                    sb.insert(i, " ");
-                    i++;
+        while (reader.hasNext()) {
+            try {
+                currentSymbol = reader.read();
+                if (nextLineIndent && currentSymbol != '}' && currentSymbol != ' ' && currentSymbol != '\n') {
+                    try {
+                        writer.write('\n');
+                    } catch (WriteException e) {
+                        e.printStackTrace();
+                    }
+                    indentWithFourSpacesNTimes(writer, indentCounter);
+                    nextLineIndent = false;
                 }
-                i++;
-                removeSpacesNewlines(sb, i);
-                countOffset++;
-                i++;
-                if(sb.charAt(i) == '}') countOffset--;
-                indentWithFourSpacesNTimes(sb, i, countOffset);
-                i += countOffset * 4;
+                switch (currentSymbol) {
+                    case '{':
+                        try {
+                            writer.write(' ');
+                            writer.write(currentSymbol);
+                            writer.write('\n');
+                            indentCounter++;
+                            indentWithFourSpacesNTimes(writer, indentCounter);
+                        } catch (WriteException e) {
+                            e.printStackTrace();
+                        }
+                        isLetter = false;
+                        isSpaceNeeded = false;
+                        break;
+                    case '}':
+                        try {
+                            writer.write('\n');
+                            indentCounter--;
+                            indentWithFourSpacesNTimes(writer, indentCounter);
+                            writer.write(currentSymbol);
+                        } catch (WriteException e) {
+                            e.printStackTrace();
+                        }
+                        isLetter = false;
+                        break;
+                    case ';':
+                        try {
+                            writer.write(currentSymbol);
+                            nextLineIndent = true;
+                        } catch (WriteException e) {
+                            e.printStackTrace();
+                        }
+                        isLetter = false;
+                        break;
+                    case ',':
+                        try {
+                            writer.write(currentSymbol);
+                            writer.write(' ');
+                        } catch (WriteException e) {
+                            e.printStackTrace();
+                        }
+                        isLetter = false;
+                        break;
+                    case ' ':
+                        if (isLetter) {
+                            isSpaceNeeded = true;
+                        }
+                        break;
+                    case '\n':
+                        if (isLetter) {
+                            isSpaceNeeded = true;
+                        }
+                        break;
+                    case '(':
+                        isSpaceNeeded = false;
+                    case '"':
+                        isSpaceNeeded = false;
+                    default:
+                        isLetter = isLetter(currentSymbol);
+                        if (isSpaceNeeded && isLetter) {
+                            try {
+                                writer.write(' ');
+                            } catch (WriteException e) {
+                                e.printStackTrace();
+                            }
+                            isSpaceNeeded = false;
+                        }
+                        try {
+                            writer.write(currentSymbol);
+                        } catch (WriteException e) {
+                            e.printStackTrace();
+                        }
+                        break;
+                }
+            } catch (ReadException | IOException e) {
+                e.printStackTrace();
             }
-
-            if (x == '}') {
-                if (i >= sb.length() - 1) break;
-                i++;
-                removeSpacesNewlines(sb, i);
-                i++;
-                if(sb.charAt(i) == '}') countOffset--;
-                indentWithFourSpacesNTimes(sb, i, countOffset);
-                i += countOffset * 4;
-            }
-
-            x = sb.charAt(i);
         }
 
-
-        return sb.toString();
     }
 
+    private void indentWithFourSpacesNTimes(final IWriter writer, final int n) {
+        for (int i = 0; i < n; i++) {
+            try {
+                writer.write(' ');
+                writer.write(' ');
+                writer.write(' ');
+                writer.write(' ');
+            } catch (WriteException | IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }

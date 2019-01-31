@@ -7,10 +7,11 @@ package it.sevenbits.formatter.io.exceptions;
  * @author Daniil Polyakov
  */
 public enum ReadingErrorCode {
+
     /**
      * Error code values.
      */
-    NO_CHARS("Nothing to read");
+    NO_CHARS("Nothing to read"), FILE_NOT_FOUND("The file doesn't exist"), DIRECTORY_FOUND("File not found. The path is a directory.");
 
     private String message;
 

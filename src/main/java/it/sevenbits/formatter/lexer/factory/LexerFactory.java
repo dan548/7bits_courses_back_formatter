@@ -2,7 +2,7 @@ package it.sevenbits.formatter.lexer.factory;
 
 import it.sevenbits.formatter.io.interfaces.IReader;
 import it.sevenbits.formatter.lexer.ILexer;
-import it.sevenbits.formatter.lexer.Lexer;
+import it.sevenbits.formatter.lexer.LexerStateMachine;
 
 /**
  * Basic lexer factory implementation.
@@ -14,6 +14,6 @@ public class LexerFactory implements ILexerFactory {
 
     @Override
     public ILexer createLexer(final IReader reader) {
-        return new Lexer(reader);
+        return new LexerStateMachine(reader);
     }
 }

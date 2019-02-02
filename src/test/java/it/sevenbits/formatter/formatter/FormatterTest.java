@@ -1,7 +1,5 @@
 package it.sevenbits.formatter.formatter;
 
-import it.sevenbits.formatter.formatter.Formatter;
-import it.sevenbits.formatter.formatter.FormatterException;
 import it.sevenbits.formatter.io.implementations.FileReader;
 import it.sevenbits.formatter.io.implementations.StringReader;
 import it.sevenbits.formatter.io.implementations.StringWriter;
@@ -21,13 +19,13 @@ import static org.junit.Assert.fail;
 
 public class FormatterTest {
 
-    private Formatter formatter;
+    private FormatterStateMachine formatter;
     private IReader reader;
     private IWriter writer;
 
     @Before
     public void before() {
-        formatter = new Formatter(new LexerFactory());
+        formatter = new FormatterStateMachine(new LexerFactory());
         writer = new StringWriter();
     }
 
@@ -35,14 +33,14 @@ public class FormatterTest {
     public void simpleTest() throws FormatterException {
         reader = new StringReader("{{{{}}}}");
         formatter.format(reader, writer);
-        assertEquals("{\n    {\n        {\n            {\n                \n            }\n        }\n    }\n}", writer.toString());
+        assertEquals("{\n    {\n        {\n            {\n            }\n        }\n    }\n}", writer.toString());
     }
 
     @Test
     public void simpleTest2() throws FormatterException {
         reader = new StringReader("a{b{c{d{}}}}");
         formatter.format(reader, writer);
-        assertEquals("a {\n    b {\n        c {\n            d {\n                \n            }\n        }\n    }\n}", writer.toString());
+        assertEquals("a {\n    b {\n        c {\n            d {\n            }\n        }\n    }\n}", writer.toString());
     }
 
     @Test
